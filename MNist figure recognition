@@ -1,0 +1,191 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyMuNVByRX/Hnb4YjFMhyGH7",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/thegangof4/basket/blob/master/MNist%20figure%20recognition\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "id": "Ilia9fxce5af"
+      },
+      "outputs": [],
+      "source": [
+        "from tensorflow.keras.models import Sequential\n",
+        "from tensorflow.keras.layers import Dense, Dropout, Flatten\n",
+        "from tensorflow.keras.datasets import mnist\n",
+        "from tensorflow.keras.utils import to_categorical\n",
+        "from tensorflow.keras.layers import Conv2D, MaxPooling2D\n",
+        "from tensorflow.keras.losses import categorical_crossentropy\n",
+        "from sklearn import metrics\n",
+        "from tensorflow.keras import backend as K"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "img_rows, img_cols = 28, 28\n",
+        "num_classes = 10\n",
+        "batch_size = 128\n",
+        "epochs = 1"
+      ],
+      "metadata": {
+        "id": "Mr_a6IAre_gL"
+      },
+      "execution_count": 2,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "(x_train, y_train), (x_test, y_test) = mnist.load_data()\n",
+        "\n",
+        "if K.image_data_format() == 'channels_first':\n",
+        "    x_train = x_train.reshape(x_train.shape[0], 1, img_rows, img_cols)\n",
+        "    x_test = x_test.reshape(x_test.shape[0], 1, img_rows, img_cols)\n",
+        "    input_shape = (1, img_rows, img_cols)\n",
+        "else:\n",
+        "    x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)\n",
+        "    x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)\n",
+        "    input_shape = (img_rows, img_cols, 1)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "yQnnynmyfK0N",
+        "outputId": "0d38f8fd-90ac-4384-833d-1556a2e4c988"
+      },
+      "execution_count": 3,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz\n",
+            "11490434/11490434 [==============================] - 0s 0us/step\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "x_train = x_train.astype('float32')\n",
+        "x_test = x_test.astype('float32')\n",
+        "x_train /= 255\n",
+        "x_test /= 255\n",
+        "y_train = to_categorical(y_train, num_classes)\n",
+        "y_test = to_categorical(y_test, num_classes)"
+      ],
+      "metadata": {
+        "id": "UuZSd6IAfNjj"
+      },
+      "execution_count": 4,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "model = Sequential()\n",
+        "model.add(Conv2D(32, kernel_size=(3, 3),\n",
+        "                 activation='relu',\n",
+        "                 input_shape=input_shape))\n",
+        "model.add(Conv2D(64, (3, 3), activation='relu'))\n",
+        "model.add(MaxPooling2D(pool_size=(2, 2)))\n",
+        "model.add(Dropout(0.25))\n",
+        "model.add(Flatten())\n",
+        "model.add(Dense(128, activation='relu'))\n",
+        "model.add(Dropout(0.5))\n",
+        "model.add(Dense(num_classes, activation='softmax'))"
+      ],
+      "metadata": {
+        "id": "fj6yktfpfsSv"
+      },
+      "execution_count": 5,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "model.compile(loss=categorical_crossentropy,\n",
+        "              optimizer='adam',\n",
+        "              metrics=['accuracy'])"
+      ],
+      "metadata": {
+        "id": "_YSYZva1fwP3"
+      },
+      "execution_count": 6,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "model.fit(x_train, y_train,\n",
+        "          batch_size=batch_size,\n",
+        "          epochs=epochs,\n",
+        "          verbose=1,\n",
+        "          validation_data=(x_test, y_test))"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "I9pIZkHFfzvf",
+        "outputId": "4e072a0b-ad86-4dcc-9659-2ee6a8008060"
+      },
+      "execution_count": 7,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "469/469 [==============================] - 170s 361ms/step - loss: 0.2458 - accuracy: 0.9240 - val_loss: 0.0543 - val_accuracy: 0.9823\n"
+          ]
+        },
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "<keras.callbacks.History at 0x7f9454821100>"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 7
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [],
+      "metadata": {
+        "id": "jQkZdjktf3Ku"
+      },
+      "execution_count": null,
+      "outputs": []
+    }
+  ]
+}
